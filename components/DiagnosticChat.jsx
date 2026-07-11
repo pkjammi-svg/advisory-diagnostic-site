@@ -1,6 +1,8 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { CATEGORIES } from "../lib/categories";
+import { createSupabaseBrowserClient } from "../lib/supabase/client";
 
 function mdToHtml(md) {
   return md
@@ -22,9 +24,13 @@ export default function DiagnosticChat({ category }) {
   const [onepager, setOnepager] = useState("");
   const [sending, setSending] = useState(false);
   const [schedStatus, setSchedStatus] = useState(null);
+  const [user, setUser] = useState(null);
+  const [saveStatus, setSaveStatus] = useState(null);
   const logRef = useRef(null);
 
   useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
     startConversation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -86,8 +92,20 @@ export default function DiagnosticChat({ category }) {
       body: JSON.stringify({ transcript })
     });
     const data = await res.json();
-    setOnepager(data.text || "Something went wrong generating the summary.");
+    const text = data.text || "Something went wrong generating the summary.";
+    setOnepager(text);
     setPhase("onepager");
+
+    if (user) {
+      const supabase = createSupabaseBrowserClient();
+      const { error } = await supabase.from("diagnostics").insert({
+        user_id: user.id,
+        category,
+        transcript,
+        onepager: text
+      });
+      setSaveStatus(error ? "error" : "saved");
+    }
   }
 
   async function submitSchedule(e) {
@@ -162,6 +180,15 @@ export default function DiagnosticChat({ category }) {
         <div className="card">
           <span className="badge">{cat.label} — your summary</span>
           <div className="onepager" dangerouslySetInnerHTML={{ __html: mdToHtml(onepager) }} />
+          {user ? (
+            <p className="success-text" style={{ marginTop: 14 }}>
+              {saveStatus === "saved" ? "Saved to your account — view it anytime under \"My diagnostics.\"" : "Saving to your account..."}
+            </p>
+          ) : (
+            <p className="sub" style={{ marginTop: 14 }}>
+              <Link className="link" href="/signup">Create a free account</Link> to save this and come back to it later.
+            </p>
+          )}
         </div>
         <div className="card">
           <h1 style={{ fontSize: 16 }}>Want us to walk you through this?</h1>
