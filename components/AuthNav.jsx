@@ -2,8 +2,15 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "../lib/supabase/server";
 
 export default async function AuthNav() {
-  const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  let user = null;
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const result = await supabase.auth.getUser();
+    user = result?.data?.user || null;
+  } catch (err) {
+    user = null;
+  }
 
   if (user) {
     return (
