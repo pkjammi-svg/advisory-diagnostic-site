@@ -1,26 +1,25 @@
 import { CATEGORIES } from "../lib/categories";
-import JourneyStrip from "../components/JourneyStrip";
- 
+import ConvergingMotif from "../components/ConvergingMotif";
+
 export default function Home() {
   return (
     <>
       <div className="band band-paper">
         <div className="band-inner hero">
-          <span className="eyebrow">Business diagnostic</span>
-          <h1>Most businesses guess at the problem.<br />We isolate the real one.</h1>
-          <p className="sub">
-            Pick what's closest to your situation. A short guided conversation gathers the facts —
-            no assumptions, no generic advice — before anything is suggested.
-          </p>
+          <div className="hero-grid">
+            <div>
+              <span className="eyebrow">Business diagnostic</span>
+              <h1>Most businesses guess at the problem.<br />We isolate the real one.</h1>
+              <p className="sub">
+                Pick what's closest to your situation. A short guided conversation gathers the facts —
+                no assumptions, no generic advice — before anything is suggested.
+              </p>
+            </div>
+            <ConvergingMotif />
+          </div>
         </div>
       </div>
- 
-      <div className="band band-tint">
-        <div className="band-inner" style={{ paddingTop: 40, paddingBottom: 40 }}>
-          <JourneyStrip />
-        </div>
-      </div>
- 
+
       <div className="band band-white">
         <section id="services" className="band-inner section">
           <div className="section-head">
@@ -38,7 +37,7 @@ export default function Home() {
           </div>
         </section>
       </div>
- 
+
       <div className="band band-paper">
         <section id="about" className="band-inner section">
           <div className="about-grid">
@@ -66,7 +65,7 @@ export default function Home() {
           </div>
         </section>
       </div>
- 
+
       <div className="band band-tint">
         <section id="team" className="band-inner section">
           <div className="section-head">
