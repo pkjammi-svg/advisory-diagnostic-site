@@ -190,6 +190,35 @@ SECTOR_ETF_PROXY = {
     "NIFTYMEDIA": None,
 }
 
+# ---------------------------------------------------------------------------
+# Deployment settings — matter mainly when running on a host with a single
+# process and/or an ephemeral filesystem (e.g. Render's free tier), where
+# there's no separate worker process or persistent disk to rely on.
+# ---------------------------------------------------------------------------
+@dataclass
+class DeploymentConfig:
+    # Auto-populate the DB on API startup if it's empty (e.g. a fresh
+    # deploy, or a free-tier host that resets its filesystem on restart).
+    # Runs in a background thread so it doesn't block server boot / health
+    # checks — the dashboard will show "loading" via its own error state
+    # until the first run finishes (a minute or two for the default stock
+    # limit; see /api/health for a simple liveness check in the meantime).
+    auto_seed_on_startup: bool = os.environ.get("MAAG_AUTO_SEED_ON_STARTUP", "true").lower() == "true"
+    stock_limit: int = int(os.environ.get("MAAG_STOCK_LIMIT", 40))
+    # Runs full_refresh/intraday_refresh on an in-process background
+    # scheduler (see app/scheduler.py::start_background_scheduler). Turn
+    # off if you're running scheduler.py as a separate process instead.
+    enable_in_process_scheduler: bool = os.environ.get("MAAG_ENABLE_SCHEDULER", "true").lower() == "true"
+    # Comma-separated list of allowed CORS origins for the frontend, e.g.
+    # "https://market-at-a-glance.vercel.app,https://your-custom-domain.com"
+    # Always includes the local Vite dev origins regardless of this setting.
+    cors_origins: list[str] = field(default_factory=lambda: [
+        o.strip() for o in os.environ.get("MAAG_CORS_ORIGINS", "").split(",") if o.strip()
+    ])
+
+
+DEPLOYMENT = DeploymentConfig()
+
 DISCLAIMER = (
     "Personal analysis tool — not investment advice. Built for solo use to "
     "support my own trading decisions; nothing here is an offer, solicitation, "

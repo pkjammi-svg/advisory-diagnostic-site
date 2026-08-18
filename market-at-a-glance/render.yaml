@@ -1,0 +1,39 @@
+# Render Blueprint for the Market at a Glance backend.
+#
+# Deploy: on render.com, "New +" -> "Blueprint" -> pick this repo -> Render
+# reads this file and proposes the service below. See
+# market-at-a-glance/DEPLOYMENT.md for the full walkthrough.
+#
+# Free-tier notes:
+#   - The filesystem is ephemeral (wiped on every deploy/restart), so the
+#     SQLite DB does not persist. app/main.py's auto-seed handles this: on
+#     every cold start it re-populates the DB in the background (a couple
+#     of minutes for the default 40-stock universe) — the API responds to
+#     /api/health immediately, and the dashboard will show data once
+#     seeding finishes.
+#   - Free web services spin down after ~15 min idle and take ~30-60s to
+#     wake on the next request. Upgrade to a paid instance to avoid that,
+#     and to add a persistent disk if you'd rather not re-seed on restart.
+services:
+  - type: web
+    name: market-at-a-glance-api
+    env: python
+    plan: free
+    rootDir: market-at-a-glance/backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: MAAG_STOCK_LIMIT
+        value: "40"
+      - key: MAAG_AUTO_SEED_ON_STARTUP
+        value: "true"
+      - key: MAAG_ENABLE_SCHEDULER
+        value: "true"
+      # Set this to your deployed Vercel URL(s) once you have it, comma-
+      # separated if more than one (e.g. a preview + production domain).
+      # The API will reject browser requests from origins not listed here.
+      - key: MAAG_CORS_ORIGINS
+        value: "https://your-app.vercel.app"
+    healthCheckPath: /api/health

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""End-to-end pipeline runner: seeds the instrument universe, ingests
-prices/options/news, computes technicals + sentiment, and generates today's
-strategy report (Stages 1-4 combined). This is what powers the dashboard's
-data — run it once before starting the API server, and re-run it daily
-(or via the APScheduler job in app/scheduler.py) to refresh.
+"""CLI wrapper around app.pipeline_runner.run_full_pipeline — seeds the
+instrument universe, ingests prices/options/news, computes technicals +
+sentiment, and generates today's strategy report (Stages 1-4 combined).
+This is what powers the dashboard's data — run it once before starting the
+API server, and re-run it daily (or via the APScheduler job in
+app/scheduler.py, or automatically on API startup — see app/main.py) to
+refresh.
 
 Usage:
   python -m scripts.run_full_pipeline               # broad+sectoral indices + pilot stock batch
@@ -19,15 +21,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from app.db import init_db, get_session
-from app.data.ingest import (
-    seed_index_instruments, seed_fo_stock_instruments, ingest_prices_for_instrument,
-    ingest_options_for_instrument, ingest_news_for_instrument, ingest_macro_news,
-)
-from app.analysis.pipeline import run_technical_analysis
-from app.sentiment.pipeline import run_sentiment_analysis
-from app.strategy.daily_report import run_daily_strategy_pipeline
-from app.models import Instrument
+from app.db import get_session
+from app.pipeline_runner import run_full_pipeline
+from app.models import Instrument, StrategyPick
 
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
 
@@ -41,35 +37,10 @@ def main():
     print("=" * 78)
     print("Market at a Glance — full pipeline run (Stages 1-4)")
     print("=" * 78)
-    init_db()
+
+    report = run_full_pipeline(stock_limit=args.stocks, indices_only=args.indices_only)
 
     with get_session() as session:
-        instruments = seed_index_instruments(session)
-        print(f"[seed] {len(instruments)} indices")
-
-        if not args.indices_only:
-            stock_instruments, fo_source = seed_fo_stock_instruments(session, limit=args.stocks)
-            print(f"[seed] {len(stock_instruments)} F&O stocks (source={fo_source})")
-            instruments += stock_instruments
-
-        print(f"[ingest] fetching prices/options/news for {len(instruments)} instruments...")
-        for i, inst in enumerate(instruments, 1):
-            ingest_prices_for_instrument(session, inst, periods=120)
-            if inst.has_derivatives:
-                ingest_options_for_instrument(session, inst)
-            ingest_news_for_instrument(session, inst)
-            if i % 10 == 0 or i == len(instruments):
-                print(f"    ...{i}/{len(instruments)} done")
-        ingest_macro_news(session)
-
-        print("[analysis] computing technicals + sentiment...")
-        for inst in instruments:
-            run_technical_analysis(session, inst)
-            run_sentiment_analysis(session, inst)
-
-        print("[strategy] running Stage 4 daily strategy pipeline...")
-        report = run_daily_strategy_pipeline(session)
-
         print("\n" + "-" * 78)
         print(f"Trade date: {report['trade_date']}")
         print(f"Broad market regime (Nifty 50): {report['broad_regime'].regime} "
@@ -84,7 +55,6 @@ def main():
         if report["no_trade_today"]:
             print("\nBEST PICK: none — no candidate cleared today's minimum score bar.")
         else:
-            from app.models import StrategyPick
             best = session.query(StrategyPick).filter_by(id=report["best_pick_id"]).one()
             inst = session.query(Instrument).filter_by(id=best.instrument_id).one()
             print(f"\nBEST PICK: {inst.name} ({inst.symbol}) — {best.structure_type} — score {best.score}")
