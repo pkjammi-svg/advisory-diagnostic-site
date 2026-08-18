@@ -13,6 +13,10 @@ guaranteed-return language by design (see "Guardrails" below).
 This app is entirely new and self-contained under `market-at-a-glance/` —
 nothing in the rest of this repository was touched or depends on it.
 
+**Want a live public URL instead of running it locally?** See
+[`DEPLOYMENT.md`](./DEPLOYMENT.md) — Render (backend) + Vercel (frontend),
+both free tiers, ~10 minutes of dashboard clicks.
+
 ## Architecture
 
 ```
