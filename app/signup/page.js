@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "../../lib/supabase/client";
+import { friendlyAuthError } from "../../lib/authErrors";
 
 export default function SignupPage() {
   const [form, setForm] = useState({ fullName: "", company: "", phone: "", email: "", password: "" });
@@ -14,18 +15,22 @@ export default function SignupPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: {
-        data: { full_name: form.fullName, company: form.company, phone: form.phone },
-        emailRedirectTo: `${window.location.origin}/login`
-      }
-    });
+    let error;
+    try {
+      ({ error } = await createSupabaseBrowserClient().auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          data: { full_name: form.fullName, company: form.company, phone: form.phone },
+          emailRedirectTo: `${window.location.origin}/login`
+        }
+      }));
+    } catch (err) {
+      error = err;
+    }
     setLoading(false);
     if (error) {
-      setError(error.message);
+      setError(friendlyAuthError(error));
       return;
     }
     setDone(true);

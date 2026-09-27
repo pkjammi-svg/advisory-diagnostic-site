@@ -3,6 +3,7 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "../../lib/supabase/client";
+import { friendlyAuthError } from "../../lib/authErrors";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
@@ -19,11 +20,15 @@ function LoginForm() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    let error;
+    try {
+      ({ error } = await createSupabaseBrowserClient().auth.signInWithPassword({ email, password }));
+    } catch (err) {
+      error = err;
+    }
     setLoading(false);
     if (error) {
-      setError(error.message);
+      setError(friendlyAuthError(error));
       return;
     }
     router.push(safeNext);
@@ -37,9 +42,13 @@ function LoginForm() {
       setError("Enter your email above first.");
       return;
     }
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
-    if (error) setError(error.message);
+    let error;
+    try {
+      ({ error } = await createSupabaseBrowserClient().auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` }));
+    } catch (err) {
+      error = err;
+    }
+    if (error) setError(friendlyAuthError(error));
     else setInfo("If that email has an account, a password reset link is on its way.");
   }
 
