@@ -1,4 +1,5 @@
--- Run this in Supabase: Project -> SQL Editor -> New query -> paste and run.
+-- Run this in Supabase: Project -> SQL Editor -> New query -> paste the WHOLE file and run.
+-- Safe to run more than once.
 
 create table if not exists leads (
   id uuid default gen_random_uuid() primary key,
@@ -31,10 +32,12 @@ alter table diagnostics enable row level security;
 
 -- Users can only see and insert their own diagnostics - this is enforced
 -- using the public anon key from the browser, so RLS policies are required here.
+drop policy if exists "Users can view their own diagnostics" on diagnostics;
 create policy "Users can view their own diagnostics"
   on diagnostics for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert their own diagnostics" on diagnostics;
 create policy "Users can insert their own diagnostics"
   on diagnostics for insert
   with check (auth.uid() = user_id);

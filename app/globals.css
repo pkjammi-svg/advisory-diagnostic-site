@@ -415,3 +415,4 @@ textarea.editor { width: 100%; min-height: 520px; font-family: var(--font-mono),
 }
 .check input[type="checkbox"], .inline-label input[type="checkbox"] { width: auto; padding: 0; }
 .nav-links a.nav-btn, .nav-links a.nav-btn:hover { color: #fff; }
+.notice.warn-notice { background: var(--warn-soft); border-color: #EBCFA6; color: var(--warn); }

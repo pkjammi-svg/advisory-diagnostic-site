@@ -107,8 +107,7 @@ filters, and who each request is waiting on. Open a request to:
 - **Private notes** — never shown to the client
 
 ### Setup for the portal
-1. In the Supabase SQL editor, run the "Client portal" section at the bottom of `supabase/schema.sql`
-   (everything from the `Client portal` comment down; if this is a brand-new project, run the whole file) — it adds the
+1. In the Supabase SQL editor, paste and run the whole of `supabase/schema.sql` (safe to re-run) — it adds the
    `engagements` and `engagement_files` tables and the private `engagement-files` storage bucket.
 2. Set `ADMIN_EMAILS` in Vercel and redeploy.
 3. Supabase → Authentication → URL Configuration: set the Site URL to your live domain so

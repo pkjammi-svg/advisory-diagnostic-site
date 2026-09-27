@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { SERVICES, STATUSES, assess } from "../../lib/services";
-import { db, getCurrentUser } from "../../lib/auth";
+import { db, getCurrentUser, setupMessage } from "../../lib/auth";
 import BarList from "../../components/admin/BarList";
 import EngagementTable from "../../components/admin/EngagementTable";
 
@@ -9,7 +9,7 @@ export default async function AdminDashboard() {
   if (!user) redirect("/login?next=/admin");
   if (!user.isAdmin) notFound();
 
-  const { data: engagements } = await db()
+  const { data: engagements, error: loadError } = await db()
     .from("engagements")
     .select("id, user_id, service, status, company_name, client_name, client_email, inputs, requests, submitted_at, updated_at, created_at")
     .order("updated_at", { ascending: false });
@@ -35,6 +35,8 @@ export default async function AdminDashboard() {
       <span className="eyebrow">Consultant dashboard</span>
       <h1 className="page-title">All clients</h1>
       <p className="sub" style={{ marginBottom: 22 }}>Every request across every client. Open one to review data, request more information, run analysis and publish the solution.</p>
+
+      {loadError && <div className="notice warn-notice">{setupMessage(loadError)}</div>}
 
       <div className="stat-row">
         <div className="kpi"><span className="kpi-label">Clients</span><span className="kpi-value">{clients}</span></div>

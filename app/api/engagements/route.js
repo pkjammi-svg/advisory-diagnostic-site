@@ -1,5 +1,5 @@
 import { SERVICES } from "../../../lib/services";
-import { db, getCurrentUser, jsonError } from "../../../lib/auth";
+import { db, getCurrentUser, jsonError, setupMessage } from "../../../lib/auth";
 
 export async function POST(req) {
   const user = await getCurrentUser();
@@ -29,6 +29,6 @@ export async function POST(req) {
     .select("id")
     .single();
 
-  if (error) return jsonError(error.message, 500);
+  if (error) return jsonError(setupMessage(error), 500);
   return Response.json({ id: data.id });
 }
