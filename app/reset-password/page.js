@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "../../lib/supabase/client";
+import { friendlyAuthError } from "../../lib/authErrors";
 
 // Supabase signs the user in from the reset-email link, then they set a new password here.
 export default function ResetPasswordPage() {
@@ -13,9 +14,14 @@ export default function ResetPasswordPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
-    const { error } = await createSupabaseBrowserClient().auth.updateUser({ password });
+    let error;
+    try {
+      ({ error } = await createSupabaseBrowserClient().auth.updateUser({ password }));
+    } catch (err) {
+      error = err;
+    }
     setLoading(false);
-    if (error) setError(error.message);
+    if (error) setError(friendlyAuthError(error));
     else router.push("/portal");
   }
 
