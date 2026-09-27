@@ -1,4 +1,5 @@
 import { CATEGORIES } from "../lib/categories";
+import { SERVICES } from "../lib/services";
 import ConvergingMotif from "../components/ConvergingMotif";
 
 export default function Home() {
@@ -14,6 +15,10 @@ export default function Home() {
                 Pick what's closest to your situation. A short guided conversation gathers the facts —
                 no assumptions, no generic advice — before anything is suggested.
               </p>
+              <div className="btn-row">
+                <a href="/login" className="button primary">Client portal — sign in</a>
+                <a href="/signup" className="button secondary">Create an account</a>
+              </div>
             </div>
             <ConvergingMotif />
           </div>
@@ -24,7 +29,21 @@ export default function Home() {
         <section id="services" className="band-inner section">
           <div className="section-head">
             <h2>Our Services</h2>
-            <p className="sub">Start with what's closest to your situation. Each one runs the same short, guided diagnostic before anything is suggested.</p>
+            <p className="sub">Sign in to the client portal, choose a service, and share your information securely. We confirm what we've received, tell you what else we need, and deliver the solution back through the portal.</p>
+          </div>
+          <div className="cat-grid">
+            {Object.values(SERVICES).map((s) => (
+              <a key={s.key} className="cat-btn" href="/services">
+                <span className="tag">Service {s.number}</span>
+                <h3>{s.label}</h3>
+                <p>{s.desc}</p>
+              </a>
+            ))}
+          </div>
+
+          <div className="section-head" style={{ marginTop: 48 }}>
+            <h3 className="display" style={{ fontSize: 19, color: "var(--indigo-deep)", margin: "0 0 8px" }}>Not sure where to start?</h3>
+            <p className="sub">Try a free 5-minute guided diagnostic — no account needed.</p>
           </div>
           <div className="cat-grid">
             {Object.entries(CATEGORIES).map(([key, c]) => (

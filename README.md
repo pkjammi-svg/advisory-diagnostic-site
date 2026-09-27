@@ -37,6 +37,10 @@ but each one takes a few minutes.
    - `ANTHROPIC_API_KEY` → your key from Step 3
    - `SUPABASE_URL` → from Step 2
    - `SUPABASE_SERVICE_ROLE_KEY` → from Step 2
+   - `NEXT_PUBLIC_SUPABASE_URL` → same Project URL as above
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` → the "anon" / public key from Project Settings → API
+   - `ADMIN_EMAILS` → your own login email(s), comma separated — these accounts get the
+     consultant dashboard (see "Client portal" below)
    - `NOTIFY_WEBHOOK_URL` → optional, leave blank for now (see below)
 3. Click Deploy. In about a minute, you'll get a live URL like
    `your-project.vercel.app` — this is your real, working website.
@@ -71,3 +75,41 @@ one-pager, and contact details saved.
   from your real availability instead
 - The 2 additional ad-matched landing pages with custom headlines per ad — right now
   all 4 categories share one generic layout; can be customized once ad copy is final
+
+---
+
+## Client portal (the main workflow)
+
+Send prospects from LinkedIn etc. to `https://your-site/login`. The flow is:
+
+1. **Login / sign up** (`/login`, `/signup`) — clients create an account with name, company, phone.
+2. **Choose a service** (`/services`) — the 4 services:
+   - New Business Evaluation & Investor Readiness
+   - Business Problem — Root Cause & Solution
+   - Business Performance Analysis
+   - Risk Assessment, SOPs & Controls
+3. **Share data** (`/engagement/<id>/data`) — guided questions plus a document checklist with
+   uploads (up to 50 MB per file, stored privately in Supabase Storage). Clients can save and return.
+4. **Confirmation** (`/engagement/<id>/confirmation`) — exactly what was received, what is still
+   needed (missing answers, missing required documents, anything you requested), and next steps.
+5. **Solution** (`/engagement/<id>/solution`) — your write-up and deliverable files, once you publish.
+6. **Client dashboard** (`/dashboard`) — every request with status and % complete.
+
+### Your consultant dashboard (`/admin`)
+Sign in with an email listed in `ADMIN_EMAILS` and you land on `/admin`: all clients, all requests,
+filters, and who each request is waiting on. Open a request to:
+- review answers and download files, with a missing-items checklist
+- **Request more info** — add items; they appear on the client's data and confirmation pages
+- **Analysis tools** — 5-year projection (startup), starter risk & control matrix (risk), and a CSV
+  performance comparison (rank customers / salespeople / products / expenses from any uploaded CSV)
+- **Solution** — edit the per-service template, optionally generate an AI first draft
+  (uses `ANTHROPIC_API_KEY`), attach deliverable files, then **Publish to client**
+- **Private notes** — never shown to the client
+
+### Setup for the portal
+1. In the Supabase SQL editor, run the "Client portal" section at the bottom of `supabase/schema.sql`
+   (everything from the `Client portal` comment down; if this is a brand-new project, run the whole file) — it adds the
+   `engagements` and `engagement_files` tables and the private `engagement-files` storage bucket.
+2. Set `ADMIN_EMAILS` in Vercel and redeploy.
+3. Supabase → Authentication → URL Configuration: set the Site URL to your live domain so
+   confirmation and password-reset emails link back correctly.
